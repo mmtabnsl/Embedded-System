@@ -1,0 +1,211 @@
+#include <Servo.h> //includes the servo library
+#include <Wire.h> 
+#include <LiquidCrystal_I2C.h>
+LiquidCrystal_I2C lcd(0x27, 16,2);
+
+Servo myservo;
+ 
+#define ir_enter 2
+#define ir_back  4
+
+#define ir_car1 5
+#define ir_car2 8
+#define ir_car3 11
+//#define ir_car4 8
+//#define ir_car5 9
+//#define ir_car6 10
+#define RLED_1 7
+#define RLED_2 10
+#define RLED_3 13
+//#define LED_4 12
+
+#define GLED_1 6
+#define GLED_2 9
+#define GLED_3 12
+
+
+int S1=0, S2=0, S3=0;
+int flag1=0, flag2=0; 
+int slot = 3;  
+
+void setup(){
+Serial.begin(9600);
+
+pinMode(ir_car1, INPUT);
+pinMode(ir_car2, INPUT);
+pinMode(ir_car3, INPUT);
+//pinMode(ir_car4, INPUT);
+//pinMode(ir_car5, INPUT);
+//pinMode(ir_car6, INPUT);
+pinMode(RLED_1, OUTPUT);
+pinMode(RLED_2, OUTPUT);
+pinMode(RLED_3, OUTPUT);
+//pinMode(LED_4, OUTPUT);
+
+pinMode(GLED_1, OUTPUT);
+pinMode(GLED_2, OUTPUT);
+pinMode(GLED_3, OUTPUT);
+
+pinMode(ir_enter, INPUT);
+pinMode(ir_back, INPUT);
+  
+myservo.attach(3);
+myservo.write(90);
+
+lcd.init();                      // initialize the lcd 
+lcd.init();
+// Print a message to the LCD.
+lcd.backlight();
+lcd.setCursor(0,0);
+lcd.print("Car Parking");
+lcd.setCursor(0,1);
+lcd.print("System");
+
+
+Read_Sensor();
+
+int total = S1+S2+S3;
+slot = slot-total; 
+}
+
+void loop(){
+
+Read_Sensor();
+
+lcd.clear();
+lcd.setCursor (0,0);
+lcd.print("Have Slot:"); 
+lcd.print(slot);
+//lcd.print("  ");  
+delay(5000);
+lcd.clear();
+lcd.setCursor (1,1);
+if(S1==1){
+  lcd.print("1:Occupied");
+  digitalWrite(RLED_1,HIGH);
+  digitalWrite(GLED_1,LOW);
+  delay(5000);
+  lcd.clear();
+  }
+     else{
+      lcd.print("1:Vacant  ");
+      digitalWrite(RLED_1,LOW);
+      digitalWrite(GLED_1,HIGH);
+      delay(5000);
+      lcd.clear();  
+      }
+
+if(S2==1){
+  lcd.print("2:Occupied");
+  digitalWrite(RLED_2,HIGH);
+  digitalWrite(GLED_2,LOW);
+  delay(5000);
+  lcd.clear();
+  }
+     else{
+      lcd.print("2:Vacant  ");
+      digitalWrite(RLED_2,LOW);
+      digitalWrite(GLED_2,HIGH);
+      delay(5000);
+      lcd.clear();
+      }
+
+//lcd.setCursor (0,2);
+if(S3==1){
+  lcd.print("3:Occupied");
+  digitalWrite(RLED_3,HIGH);
+  digitalWrite(GLED_3,LOW);
+  delay(5000);
+  lcd.clear();
+  }
+     else{
+      lcd.print("3:Vacant  ");
+      digitalWrite(RLED_3,LOW);
+      digitalWrite(GLED_3,HIGH);
+      delay(5000);
+      lcd.clear();
+      }
+/*
+lcd.setCursor (10,2);
+if(S4==1){
+lcd.print("4:Occupied");
+digitalWrite(LED_4,HIGH);
+  }
+     else{
+      lcd.print("4:Vacant  ");
+      digitalWrite(LED_4,LOW);
+      }
+
+ lcd.setCursor (0,3);
+
+if(S5==1){
+lcd.print("5:Occupied");
+  }
+     else{
+      lcd.print("5:Vacant  ");
+      }
+
+lcd.setCursor (10,3);
+if(S6==1){
+lcd.print("6:Occupied");
+  }
+     else{
+      lcd.print("6:Vacant  ");
+      }
+*/
+if(digitalRead (ir_enter) == 0 && flag1==0){
+  if(slot>0){
+    flag1=1;
+    if(flag2==0){
+      myservo.write(180); 
+      slot = slot-1;
+      delay(5000);
+      myservo.write(0);
+      }
+      else{
+        myservo.write(180);
+      }
+    }
+  else{
+    lcd.setCursor (0,0);
+    lcd.print("Parking is Full");  
+    delay(1500);
+    }   
+}
+
+if(digitalRead (ir_back) == 0 && flag2==0)
+{
+  flag2=1;
+  if(flag1==0){
+    myservo.write(0); 
+    slot = slot+1;
+    delay(5000);
+    myservo.write(180);
+    }
+   else{
+    myservo.write(0); 
+   }
+}
+
+if(flag1==1 && flag2==1){
+  delay (1000);
+  myservo.write(90);
+  flag1=0, flag2=0;
+  delay(5000);
+  myservo.write(0);
+}
+
+delay(1);
+
+}
+
+void Read_Sensor(){
+S1=0, S2=0, S3=0;
+
+if(digitalRead(ir_car1) == 0){S1=1;}
+if(digitalRead(ir_car2) == 0){S2=1;}
+if(digitalRead(ir_car3) == 0){S3=1;}
+//if(digitalRead(ir_car4) == 0){S4=1;}
+//if(digitalRead(ir_car5) == 0){S5=1;}
+//if(digitalRead(ir_car6) == 0){S6=1;}  
+}
